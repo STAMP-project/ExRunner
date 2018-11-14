@@ -1,5 +1,7 @@
-
-
+import threading
+from os import path,chdir, makedirs
+import json
+import re
 # Read stack trace and find valid frames
 class LogReader():
     ExceptionName = ""
@@ -11,7 +13,7 @@ class LogReader():
         self.project_frames_count = 0
         #reading Exceptions:
         dir_path = path.dirname(path.realpath(__file__))
-        with open(path.join(dir_path,"inputs","exceptions.txt"), 'r') as content_file:
+        with open(path.join(dir_path,"..","experiment-runner","inputs","exceptions.txt"), 'r') as content_file:
             content = content_file.read()
         exceptionList = json.loads(content)
         for index,ex in enumerate(exceptionList):
@@ -53,3 +55,24 @@ class LogReader():
 
     def getProjectFramesCount(self):
         return self.project_frames_count
+
+
+
+
+class RunBotsing(threading.Thread):
+    def __init__(self, name, java_file_dir, libraryString, theQueue=None, observerThread=None,isMultiObjective=False):
+        threading.Thread.__init__(self)
+        self.theQueue = theQueue
+        self.java_file_dir = java_file_dir
+        self.name = name
+        self.libraryString = libraryString
+        self.observerThread = observerThread
+        self.isMultiObjective = isMultiObjective
+
+        print ("Thread #" + name + " is initialized.")
+
+
+class Observer(threading.Thread):
+    def __init__(self,number_of_threads_to_observe):
+        threading.Thread.__init__(self)
+        print "Observer Thread is initialized"
