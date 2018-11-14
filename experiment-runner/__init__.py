@@ -5,7 +5,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(dir_path)
 path.insert(0,parentdir)
 from botsing import LogReader
-from botsing import RunBotsing
+from botsing import RunJar
 from botsing import Observer
 
 is_py2 = version[0] == '2'
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     index = 0
     threads = []
     for OneOf in range(maximum_number_of_threads):
-        thread = RunBotsing(name=str(index + 1),java_file_dir="",libraryString="",theQueue=queue,observerThread=observerThread,isMultiObjective=isMultiObjective)
+        thread = RunJar(name=str(index + 1),java_file_dir="",libraryString="",theQueue=queue,observerThread=observerThread,isMultiObjective=isMultiObjective)
         thread.start()
         threads.append(thread)
         index+=1
