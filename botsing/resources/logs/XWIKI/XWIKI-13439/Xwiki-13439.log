@@ -1,0 +1,15 @@
+java.lang.ClassCastException: org.xwiki.contrib.oidc.provider.internal.OIDCResourceReference cannot be cast to org.xwiki.resource.entity.EntityResourceReference
+	at com.xpn.xwiki.XWiki.initializeResourceFromURL(XWiki.java:816)
+	at com.xpn.xwiki.XWiki.getXWiki(XWiki.java:763)
+	at com.xpn.xwiki.XWiki.getXWiki(XWiki.java:740)
+	at org.xwiki.contrib.oidc.provider.internal.OIDCResourceReferenceHandler.initializeXWikiContext(OIDCResourceReferenceHandler.java:148)
+	at org.xwiki.contrib.oidc.provider.internal.OIDCResourceReferenceHandler.handle(OIDCResourceReferenceHandler.java:97)
+	at org.xwiki.resource.internal.DefaultResourceReferenceHandlerChain.handleNext(DefaultResourceReferenceHandlerChain.java:61)
+	at org.xwiki.resource.internal.AbstractResourceReferenceHandlerManager.handle(AbstractResourceReferenceHandlerManager.java:77)
+	at org.xwiki.resource.servlet.ResourceReferenceHandlerServlet.handleResourceReference(ResourceReferenceHandlerServlet.java:161)
+	at org.xwiki.resource.servlet.ResourceReferenceHandlerServlet.service(ResourceReferenceHandlerServlet.java:89)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:729)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:292)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:207)
+	at org.xwiki.container.servlet.filters.internal.SetHTTPHeaderFilter.doFilter(SetHTTPHeaderFilter.java:63)
+	
