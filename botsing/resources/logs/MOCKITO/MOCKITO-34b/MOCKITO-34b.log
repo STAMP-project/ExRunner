@@ -1,2 +1,0 @@
-java.lang.ArrayIndexOutOfBoundsException: 0
-	at org.mockito.internal.invocation.InvocationMatcher.captureArgumentsFrom(InvocationMatcher.java:107)

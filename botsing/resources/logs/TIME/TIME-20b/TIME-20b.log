@@ -1,2 +1,0 @@
-java.lang.IllegalArgumentException: Invalid format: "2007-03-04 12:30 America/Dawson_Creek" is malformed at "_Creek"
-	at org.joda.time.format.DateTimeFormatter.parseDateTime(DateTimeFormatter.java:866)

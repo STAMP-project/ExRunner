@@ -1,2 +1,0 @@
-java.lang.IllegalArgumentException: Minutes out of range: -15
-	at org.joda.time.DateTimeZone.forOffsetHoursMinutes(DateTimeZone.java:280)

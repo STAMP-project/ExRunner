@@ -1,2 +1,0 @@
-java.lang.StringIndexOutOfBoundsException: String index out of range: 15
-	at org.apache.commons.lang.WordUtils.abbreviate(WordUtils.java:629)
