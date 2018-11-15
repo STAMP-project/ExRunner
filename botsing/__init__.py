@@ -1,9 +1,11 @@
 import threading
-from os import path,chdir, makedirs
+from os import path, makedirs
 import json
 import re
 from time import time,sleep
 from subprocess import PIPE,Popen
+import errno
+from helper import BotsingOutputAnalysor
 # Read stack trace and find valid frames
 
 
@@ -64,7 +66,7 @@ class LogReader():
 
 
 class RunJar(threading.Thread):
-
+    botsing_path = path.dirname(path.realpath(__file__))
 
     def __init__(self, name, java_file_dir, libraryString, theQueue=None, observerThread=None,isMultiObjective=False):
         threading.Thread.__init__(self)
@@ -88,15 +90,65 @@ class RunJar(threading.Thread):
         process.terminate()
 
     def run(self):
-
-
+        log_helper = BotsingOutputAnalysor()
         while not self.theQueue.empty():
             csv_result = {}
             configurations = self.theQueue.get()
+            log_dir = path.join(self.botsing_path,"resources","logs",configurations["application"].upper(),configurations["case"],configurations["case"]+".log")
+            bins_dir = path.join(self.botsing_path,"resources","targeted-software",configurations["application"].upper()+"-bins",configurations["application"].upper()+"-"+configurations["version"])
             self.theQueue.task_done()
+            cmd = ["java","-Xmx4000m","-jar",path.join(self.botsing_path,"libs","botsing.jar"),"-crash_log",log_dir,"-projectCP",bins_dir,"-target_frame",str(configurations["frame"])]
+            popen = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+            csv_result["is_protected/private"] = "Yes"
+            self.dir_path = path.dirname(path.realpath(__file__))
+            execution_log_path = path.join(self.dir_path,"..","experiment-runner", "outputs", "logs", configurations["case"],
+                                               "frame-" + str(configurations["frame"]),
+                                               "R" + str(configurations["execution_idx"]) + "_PM" + configurations[
+                                                   "p_functional_mocking"] + "_Mperc" + configurations[
+                                                   "functional_mocking_percent"] + "_SB" + configurations[
+                                                   "search_budget"] + "_POP" + configurations["population"], "out")
 
+            # openning out log file
+            filename = path.join(execution_log_path,
+                                 configurations["case"] + "-frame" + str(configurations["frame"]) + "-" + "out.txt")
+            if not path.exists(path.dirname(filename)):
+                try:
+                    makedirs(path.dirname(filename))
+                except OSError as exc:  # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+
+            self.observerThread.start_process(int(self.name), popen, configurations)
+            try:
+                error = popen.stderr
+                f = open(filename, "w")
+                evalIndicator=0
+                for stdout_line in iter(popen.stdout.readline, ""):
+                    log_helper.analyze(stdout_line,csv_result,self.name,configurations["population"])
+                    f.write(stdout_line)
+
+            finally:
+                self.observerThread.process_is_finished(int(self.name))
+                f.close()
             print ("Reporter #" + self.name + " _ Case " + configurations["case"] +" _ Frame "+str(configurations["frame"])+" _ Population "+str(configurations["population"])+": EvoCrash Execution is finished. out log file is saved.")
-
+            csv_result["application"] = configurations["application"]
+            csv_result["case"] = configurations["case"]
+            csv_result["version"] = configurations["version"]
+            csv_result["execution_idx"] = configurations["execution_idx"]
+            csv_result["frame_level"] = str(configurations["frame"])
+            csv_result["exception_name"] = configurations["getExceptionName"]
+            csv_result["p_functional_mocking"] = configurations["p_functional_mocking"]
+            csv_result["functional_mocking_percent"] = configurations["functional_mocking_percent"]
+            csv_result["p_reflection_on_private"] = configurations["p_reflection_on_private"]
+            csv_result["reflection_start_percent"] = configurations["reflection_start_percent"]
+            csv_result["search_budget"] = configurations["search_budget"]
+            csv_result["population"] = configurations["population"]
+            error_path = path.join(self.dir_path,"..", "experiment-runner","outputs""logs",configurations["case"],"frame-"+str(configurations["frame"]),"R"+str(configurations["execution_idx"])+"_PM"+configurations["p_functional_mocking"]+"_Mperc"+configurations["functional_mocking_percent"]+"_SB"+configurations["search_budget"]+"_POP"+configurations["population"],"err")
+            log_helper.save_logs(str(error), csv_result,error_path)
+            log_helper.write_on_csv_file(csv_result)
+            print ("Reporter #" + self.name + " _ Case " + configurations["case"] + " _ Frame " + str(
+                configurations["frame"]) + " _ Population " + str(
+                configurations["population"]) + ": results are added to csv file")
 
         self.observerThread.finishing_thread(int(self.name))
 
