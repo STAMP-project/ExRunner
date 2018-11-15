@@ -35,5 +35,5 @@ class OtherData:
     seed_mutations=[0]
     p_object_pool=[0]
     # First index: target probability  |  Second index: non-target probability
-    p_model_pool_init = [[0.2, 0.2], [0.8, 0.8]];
+    p_model_pool_init = [[0.2, 0.2]];
     repeat = 1
