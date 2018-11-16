@@ -28,8 +28,8 @@ for index,case in enumerate(cases):
                             for sm in OtherData().seed_mutations:
                                 for pobj in OtherData().p_object_pool:
                                     for pmodel in OtherData.p_model_pool_init:
-                                        classpath = path.join("JarFiles","resources","targeted-software",project["name"].upper()+"-bins",project["name"].upper()+"-"+case["version"])
-                                        stacktracePath = path.join("JarFiles","resources","logs",project["name"].upper(),case["name"],case["name"]+".log")
+                                        classpath = path.join("becnhmark","applications",project["name"].upper()+"-bins",project["name"].upper()+"-"+case["version"])
+                                        stacktracePath = path.join("becnhmark","crashes",project["name"].upper(),case["name"],case["name"]+".log")
                                         testDir = path.join("JarFiles","GGA-tests",case["name"])
                                         row = []
                                         row.append(i+1)

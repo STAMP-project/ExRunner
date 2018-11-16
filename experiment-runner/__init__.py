@@ -19,7 +19,7 @@ if __name__ == '__main__':
     dir_path = os.path.dirname(os.path.realpath(__file__))
     # java_file_dir = os.path.join(dir_path, "..", "botsing", "src")
     botsing_libs = os.path.join(dir_path, "..", "botsing", "libs")
-    log_path = os.path.join(dir_path, "..", "botsing", "resources", "logs", )
+    log_path = os.path.join(dir_path, "..", "benchmark", "crashes", )
 
 
 

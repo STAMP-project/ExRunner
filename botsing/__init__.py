@@ -94,14 +94,14 @@ class RunJar(threading.Thread):
         while not self.theQueue.empty():
             csv_result = {}
             configurations = self.theQueue.get()
-            log_dir = path.join(self.botsing_path,"resources","logs",configurations["application"].upper(),configurations["case"],configurations["case"]+".log")
-            bins_dir = path.join(self.botsing_path,"resources","targeted-software",configurations["application"].upper()+"-bins",configurations["application"].upper()+"-"+configurations["version"])
+            log_dir = path.join(self.botsing_path,"..","benchmark","crashes",configurations["application"].upper(),configurations["case"],configurations["case"]+".log")
+            bins_dir = path.join(self.botsing_path,"..","benchmark","applications",configurations["application"].upper()+"-bins",configurations["application"].upper()+"-"+configurations["version"])
             self.theQueue.task_done()
             cmd = ["java","-Xmx4000m","-jar",path.join(self.botsing_path,"libs","botsing.jar"),"-crash_log",log_dir,"-projectCP",bins_dir,"-target_frame",str(configurations["frame"])]
             popen = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
             csv_result["is_protected/private"] = "Yes"
             self.dir_path = path.dirname(path.realpath(__file__))
-            execution_log_path = path.join(self.dir_path,"..","experiment-runner", "outputs", "logs", configurations["case"],
+            execution_log_path = path.join(self.dir_path,"..","experiment-runner", "outputs", "crashes", configurations["case"],
                                                "frame-" + str(configurations["frame"]),
                                                "R" + str(configurations["execution_idx"]) + "_PM" + configurations[
                                                    "p_functional_mocking"] + "_Mperc" + configurations[
@@ -143,7 +143,7 @@ class RunJar(threading.Thread):
             csv_result["reflection_start_percent"] = configurations["reflection_start_percent"]
             csv_result["search_budget"] = configurations["search_budget"]
             csv_result["population"] = configurations["population"]
-            error_path = path.join(self.dir_path,"..", "experiment-runner","outputs""logs",configurations["case"],"frame-"+str(configurations["frame"]),"R"+str(configurations["execution_idx"])+"_PM"+configurations["p_functional_mocking"]+"_Mperc"+configurations["functional_mocking_percent"]+"_SB"+configurations["search_budget"]+"_POP"+configurations["population"],"err")
+            error_path = path.join(self.dir_path,"..", "experiment-runner","outputs","crashes",configurations["case"],"frame-"+str(configurations["frame"]),"R"+str(configurations["execution_idx"])+"_PM"+configurations["p_functional_mocking"]+"_Mperc"+configurations["functional_mocking_percent"]+"_SB"+configurations["search_budget"]+"_POP"+configurations["population"],"err")
             log_helper.save_logs(str(error), csv_result,error_path)
             log_helper.write_on_csv_file(csv_result)
             print ("Reporter #" + self.name + " _ Case " + configurations["case"] + " _ Frame " + str(
