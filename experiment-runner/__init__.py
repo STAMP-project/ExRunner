@@ -1,5 +1,5 @@
 import os
-from sys import argv, version,path
+from sys import argv, version,path,exit
 from inputs import Input
 dir_path = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(dir_path)
@@ -23,22 +23,33 @@ if __name__ == '__main__':
 
 
 
-    #get the input arguments (default value is 5):
-    maximum_number_of_threads = 5
+    #get the input arguments (default value for number of threads is 5):
+    maximum_number_of_threads = None
     isMultiObjective = False
-    if len(argv) == 3:
-         if argv[1] == "m" or argv[1] == "M":
+    isModelGeneration = False
+    print argv
+    for index, argument in enumerate(argv, start=0):
+         if index == 0:
+             continue
+         if argument.isdigit():
+             if maximum_number_of_threads is None:
+                maximum_number_of_threads = argument
+                continue
+             else:
+                 print ("Error: number of threads is set two times!")
+                 exit(0)
+         if argument == "--multiObj":
              isMultiObjective= True
+             continue
+         if argument == "--modelGen":
+             isModelGeneration = True
+             continue
+         # if an iteration reach to this point, the argument is not set properly.
+         print ("Error: The argument `%s` is wrong" % argument)
+         exit(0)
 
-         maximum_number_of_threads = int(argv[2])
-
-    if len(argv) == 2:
-        if argv[1].isdigit():
-            maximum_number_of_threads = int(argv[1])
-        else:
-            if argv[1] == "m" or argv[1] == "M":
-                isMultiObjective = True
-
+    if maximum_number_of_threads is None:
+        maximum_number_of_threads = 5
 
     #initializing logReader
     # logReader = LogReader
