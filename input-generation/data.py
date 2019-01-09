@@ -21,7 +21,9 @@ class CaseData:
         {"id": "4", "project": "0", "name": "XWIKI-13916", "version": "8.4", "fixed": "1", "fixed_version": "8.4.2",
          "buggy_frame": "1"},
         {"id": "17", "project": "0", "name": "XWIKI-13196", "version": "7.4.2", "fixed": "0", "fixed_version": "",
-         "buggy_frame": ""}
+         "buggy_frame": ""},
+        {"id": "18", "project": "0", "name": "XWIKI-13372", "version": "7.4.2", "fixed": "1", "fixed_version": "7.4.6",
+         "buggy_frame": "2"}
              ]
 
 
