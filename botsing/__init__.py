@@ -103,7 +103,7 @@ class RunJar(threading.Thread):
             self.theQueue.task_done()
             cmd = ["java", "-Xmx4000m", "-jar", path.join(self.botsing_path, "libs", "botsing.jar"), "-crash_log",
                    log_dir, "-projectCP", bins_dir, "-target_frame", str(configurations["frame"])]
-            popen = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+            popen = Popen(cmd, stdout=PIPE, stderr=PIPE)
             csv_result["is_protected/private"] = "Yes"
             self.dir_path = path.dirname(path.realpath(__file__))
             execution_log_path = path.join(self.dir_path, "..", "experiment-runner", "outputs", "crashes",
@@ -214,7 +214,7 @@ class RunJar(threading.Thread):
                     if exc.errno != errno.EEXIST:
                         raise
             f = open(filename, "w")
-            f.write(error)
+            f.write(str(error))
             f.close()
 
         self.observerThread.finishing_thread(int(self.name))
