@@ -68,7 +68,7 @@ class LogReader():
 class RunJar(threading.Thread):
     botsing_path = path.dirname(path.realpath(__file__))
 
-    def __init__(self, name, java_file_dir, libraryString, theQueue=None, observerThread=None,isMultiObjective=False):
+    def __init__(self, name, java_file_dir, libraryString, theQueue=None, observerThread=None,isMultiObjective=False,isModelGeneration=False):
         threading.Thread.__init__(self)
         self.theQueue = theQueue
         self.java_file_dir = java_file_dir
@@ -76,6 +76,7 @@ class RunJar(threading.Thread):
         self.libraryString = libraryString
         self.observerThread = observerThread
         self.isMultiObjective = isMultiObjective
+        self.isModelGeneration = isModelGeneration
 
         print ("Thread #" + name + " is created.")
     # if achieved to computation finished, stop the process and its threads.
@@ -89,24 +90,29 @@ class RunJar(threading.Thread):
         print ("*******************")
         process.terminate()
 
-    def run(self):
+    def runCrashReproduction(self):
         log_helper = BotsingOutputAnalysor()
         while not self.theQueue.empty():
             csv_result = {}
             configurations = self.theQueue.get()
-            log_dir = path.join(self.botsing_path,"..","benchmark","crashes",configurations["application"].upper(),configurations["case"],configurations["case"]+".log")
-            bins_dir = path.join(self.botsing_path,"..","benchmark","applications",configurations["application"].upper()+"-bins",configurations["application"].upper()+"-"+configurations["version"])
+            log_dir = path.join(self.botsing_path, "..", "benchmark", "crashes", configurations["application"].upper(),
+                                configurations["case"], configurations["case"] + ".log")
+            bins_dir = path.join(self.botsing_path, "..", "benchmark", "applications",
+                                 configurations["application"].upper() + "-bins",
+                                 configurations["application"].upper() + "-" + configurations["version"])
             self.theQueue.task_done()
-            cmd = ["java","-Xmx4000m","-jar",path.join(self.botsing_path,"libs","botsing.jar"),"-crash_log",log_dir,"-projectCP",bins_dir,"-target_frame",str(configurations["frame"])]
+            cmd = ["java", "-Xmx4000m", "-jar", path.join(self.botsing_path, "libs", "botsing.jar"), "-crash_log",
+                   log_dir, "-projectCP", bins_dir, "-target_frame", str(configurations["frame"])]
             popen = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
             csv_result["is_protected/private"] = "Yes"
             self.dir_path = path.dirname(path.realpath(__file__))
-            execution_log_path = path.join(self.dir_path,"..","experiment-runner", "outputs", "crashes", configurations["case"],
-                                               "frame-" + str(configurations["frame"]),
-                                               "R" + str(configurations["execution_idx"]) + "_PM" + configurations[
-                                                   "p_functional_mocking"] + "_Mperc" + configurations[
-                                                   "functional_mocking_percent"] + "_SB" + configurations[
-                                                   "search_budget"] + "_POP" + configurations["population"], "out")
+            execution_log_path = path.join(self.dir_path, "..", "experiment-runner", "outputs", "crashes",
+                                           configurations["case"],
+                                           "frame-" + str(configurations["frame"]),
+                                           "R" + str(configurations["execution_idx"]) + "_PM" + configurations[
+                                               "p_functional_mocking"] + "_Mperc" + configurations[
+                                               "functional_mocking_percent"] + "_SB" + configurations[
+                                               "search_budget"] + "_POP" + configurations["population"], "out")
 
             # openning out log file
             filename = path.join(execution_log_path,
@@ -122,15 +128,16 @@ class RunJar(threading.Thread):
             try:
                 error = popen.stderr
                 f = open(filename, "w")
-                evalIndicator=0
                 for stdout_line in iter(popen.stdout.readline, ""):
-                    log_helper.analyze(stdout_line,csv_result,self.name,configurations["population"])
+                    log_helper.analyze(stdout_line, csv_result, self.name, configurations["population"])
                     f.write(stdout_line)
 
             finally:
                 self.observerThread.process_is_finished(int(self.name))
                 f.close()
-            print ("Reporter #" + self.name + " _ Case " + configurations["case"] +" _ Frame "+str(configurations["frame"])+" _ Population "+str(configurations["population"])+": EvoCrash Execution is finished. out log file is saved.")
+            print ("Reporter #" + self.name + " _ Case " + configurations["case"] + " _ Frame " + str(
+                configurations["frame"]) + " _ Population " + str(
+                configurations["population"]) + ": Botsing Execution is finished. out log file is saved.")
             csv_result["application"] = configurations["application"]
             csv_result["case"] = configurations["case"]
             csv_result["version"] = configurations["version"]
@@ -143,8 +150,13 @@ class RunJar(threading.Thread):
             csv_result["reflection_start_percent"] = configurations["reflection_start_percent"]
             csv_result["search_budget"] = configurations["search_budget"]
             csv_result["population"] = configurations["population"]
-            error_path = path.join(self.dir_path,"..", "experiment-runner","outputs","crashes",configurations["case"],"frame-"+str(configurations["frame"]),"R"+str(configurations["execution_idx"])+"_PM"+configurations["p_functional_mocking"]+"_Mperc"+configurations["functional_mocking_percent"]+"_SB"+configurations["search_budget"]+"_POP"+configurations["population"],"err")
-            log_helper.save_logs(str(error), csv_result,error_path)
+            error_path = path.join(self.dir_path, "..", "experiment-runner", "outputs", "crashes",
+                                   configurations["case"], "frame-" + str(configurations["frame"]),
+                                   "R" + str(configurations["execution_idx"]) + "_PM" + configurations[
+                                       "p_functional_mocking"] + "_Mperc" + configurations[
+                                       "functional_mocking_percent"] + "_SB" + configurations[
+                                       "search_budget"] + "_POP" + configurations["population"], "err")
+            log_helper.save_logs(str(error), csv_result, error_path)
             log_helper.write_on_csv_file(csv_result)
             print ("Reporter #" + self.name + " _ Case " + configurations["case"] + " _ Frame " + str(
                 configurations["frame"]) + " _ Population " + str(
@@ -153,10 +165,69 @@ class RunJar(threading.Thread):
         self.observerThread.finishing_thread(int(self.name))
 
 
+    def runModelGeneration(self):
+        self.dir_path = path.dirname(path.realpath(__file__))
+        while not self.theQueue.empty():
+            configurations = self.theQueue.get()
+            log_dirs=[]
+            for crash in configurations["crashes"]:
+                crash_path=path.join(self.botsing_path, "..", "benchmark", "crashes", configurations["application"].upper(),
+                                crash, crash + ".log")
+                log_dirs.append(crash_path)
+            bins_dir = path.join(self.botsing_path, "..", "benchmark", "applications",
+                                 configurations["application"].upper() + "-bins",
+                                 configurations["application"].upper() + "-" + configurations["version"])
+
+            outDir =  path.join(self.dir_path, "..", "experiment-runner", "outputs", "phase1",configurations["version"])
+            logs_dirs_json=json.dumps(log_dirs)
+            self.theQueue.task_done()
+            cmd = ["java", "-Xmx4000m", "-jar", path.join(self.botsing_path, "libs", "botsing-model-generation.jar"),
+                   "-projectCP", bins_dir, "-projectPackage", configurations["package"],"-crashes",logs_dirs_json, "-outDir", outDir]
+            popen = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+            execution_log_path = path.join(self.dir_path, "..", "experiment-runner", "outputs", "phase1log",configurations["version"], "out")
+            filename = path.join(execution_log_path,configurations["version"]+ "-" + "out.txt")
+            if not path.exists(path.dirname(filename)):
+                try:
+                    makedirs(path.dirname(filename))
+                except OSError as exc:  # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+
+            self.observerThread.start_process(int(self.name), popen, configurations)
+            try:
+                error = popen.stderr
+                f = open(filename, "w")
+                for stdout_line in iter(popen.stdout.readline, ""):
+                    f.write(stdout_line)
+            finally:
+                self.observerThread.process_is_finished(int(self.name))
+                f.close()
+            print ("Reporter #" + self.name + " _  application " + configurations["application"] + " _ version " +configurations["version"]+" is finished.")
+
+            error_path = path.join(self.dir_path, "..", "experiment-runner", "outputs", "phase1log",configurations["version"], "err")
+            # write err
+            filename = path.join(execution_log_path, configurations["version"] + "-" + "err.txt")
+            if not path.exists(path.dirname(filename)):
+                try:
+                    makedirs(path.dirname(filename))
+                except OSError as exc:  # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
+            f = open(filename, "w")
+            f.write(error)
+            f.close()
+
+        self.observerThread.finishing_thread(int(self.name))
+    def run(self):
+        if self.isModelGeneration:
+            self.runModelGeneration()
+        else:
+            self.runCrashReproduction()
+
 
 class Observer(threading.Thread):
     list_of_threads = []
-    max_time = 10 * 60  # if Crash Replication tool does not response for 10 minutes, the observer will stop that instance of the tool.
+    max_time = 100 * 60  # if Crash Replication tool does not response for 100 minutes, the observer will stop that instance of the tool.
 
     def __init__(self, number_of_threads_to_observe):
         threading.Thread.__init__(self)

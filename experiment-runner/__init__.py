@@ -14,6 +14,45 @@ if is_py2:
 else:
     import queue as qu
 
+
+
+def prepareQ(input_rows,isMultiObjective,isModelGeneration):
+    queue = qu.Queue()
+
+    if isModelGeneration:
+        versions={}
+        for currentRow in input_rows:
+            if not versions.has_key(currentRow["application"]+"|"+currentRow["package"]+"|"+currentRow["version"]):
+                versions[currentRow["application"]+"|"+currentRow["package"]+"|"+currentRow["version"]] = []
+
+            versions[currentRow["application"]+"|"+currentRow["package"]+"|"+currentRow["version"]].append(currentRow["case"])
+        for v in versions.keys():
+            # each loop is a run
+            currentRun={}
+            splittedKey=v.split("|")
+            currentRun["application"]=splittedKey[0]
+            currentRun["package"]=splittedKey[1]
+            currentRun["version"]=splittedKey[2]
+            currentRun["crashes"]=versions[v]
+            queue.put(currentRun.copy())
+    else:
+        # initilize the log reader
+        log_reader = LogReader()
+        for currentRun in input_rows:
+            # Get valid frames from log files
+            validFrames = log_reader.getValidFrameLevels(
+                os.path.join(log_path, currentRun["application"].upper(), currentRun["case"].strip(),
+                             currentRun["case"].strip() + ".log"), currentRun["package"])
+            currentRun["getExceptionName"] = log_reader.getExceptionName()
+            currentRun["all_frames_count"] = log_reader.getAllFramesCount()
+            currentRun["project_frames_count"] = log_reader.getProjectFramesCount()
+            currentRun["isMulti"] = 1 if isMultiObjective else 0;
+            for frame in validFrames:
+                currentRun["frame"] = frame
+                queue.put(currentRun.copy())
+
+    return queue
+
 if __name__ == '__main__':
     # directories definitions
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -27,13 +66,12 @@ if __name__ == '__main__':
     maximum_number_of_threads = None
     isMultiObjective = False
     isModelGeneration = False
-    print argv
     for index, argument in enumerate(argv, start=0):
          if index == 0:
              continue
          if argument.isdigit():
              if maximum_number_of_threads is None:
-                maximum_number_of_threads = argument
+                maximum_number_of_threads = int(argument)
                 continue
              else:
                  print ("Error: number of threads is set two times!")
@@ -51,47 +89,23 @@ if __name__ == '__main__':
     if maximum_number_of_threads is None:
         maximum_number_of_threads = 5
 
-    #initializing logReader
-    # logReader = LogReader
-
     # get inputs from csv
     input_fetcher = Input()
-    runs_configs = input_fetcher.fetchInputs()
-    number_of_runs = len(runs_configs)
-    print ("number of runs: " + str(number_of_runs))
+    input_rows = input_fetcher.fetchInputs()
 
-    # Define a queue. all of the runs will be stored in it
-    queue = qu.Queue()
-
-
-
-    # initilize the log reader
-    log_reader = LogReader()
-
-    #add all of the runs to the Queue
-    for currentRun in runs_configs:
-        # Get valid frames from log files
-        validFrames = log_reader.getValidFrameLevels(
-        os.path.join(log_path, currentRun["application"].upper(), currentRun["case"].strip(),
-        currentRun["case"].strip() + ".log"), currentRun["package"])
-        currentRun["getExceptionName"] = log_reader.getExceptionName()
-        currentRun["all_frames_count"] = log_reader.getAllFramesCount()
-        currentRun["project_frames_count"] = log_reader.getProjectFramesCount()
-        currentRun["isMulti"] = 1 if isMultiObjective else 0;
-        for frame in validFrames:
-            currentRun["frame"] = frame
-            queue.put(currentRun.copy())
-
+    # Prepare the experiment queue
+    queue = prepareQ(input_rows,isMultiObjective,isModelGeneration);
+    #
+    # if not isModelGeneration:
     #Create observer Thread
     observerThread = Observer(maximum_number_of_threads)
     observerThread.start()
-
 
     #Starting threads
     index = 0
     threads = []
     for OneOf in range(maximum_number_of_threads):
-        thread = RunJar(name=str(index + 1),java_file_dir="",libraryString="",theQueue=queue,observerThread=observerThread,isMultiObjective=isMultiObjective)
+        thread = RunJar(name=str(index + 1),java_file_dir="",libraryString="",theQueue=queue,observerThread=observerThread,isMultiObjective=isMultiObjective,isModelGeneration=isModelGeneration)
         thread.start()
         threads.append(thread)
         index+=1
@@ -101,3 +115,4 @@ if __name__ == '__main__':
             i.join()
     except Exception as exc:
         print (exc)
+
