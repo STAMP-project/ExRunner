@@ -1,3 +1,4 @@
+**! For the latest and Docker-based version of ExRunner, please check [this repository](https://github.com/STAMP-project/ExRunner-bash).**
 # ExRunner
 
 A Python library for automatically running experiments with crash reproduction tools in Java. This version is simpler and more user-friendly than the alpha version. This tool is re-designed to be compatible with the new version of the search-based crash reproduction tool, called  Botsing. In this documentation, we describe how to run the sample, how to apply Botsing to the new stack traces. Finally, we demonstrate how this library can be extended for the other crash reproduction tools.
