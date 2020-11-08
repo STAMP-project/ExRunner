@@ -1,0 +1,1 @@
+<open file '<fdopen>', mode 'rb' at 0x10f1c1270>

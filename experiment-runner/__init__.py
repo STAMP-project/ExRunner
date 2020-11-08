@@ -17,6 +17,8 @@ else:
 
 
 def prepareQ(input_rows,isMultiObjective,isModelGeneration):
+    temp = []
+
     queue = qu.Queue()
 
     if isModelGeneration:

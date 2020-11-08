@@ -15,16 +15,15 @@ fieldnames = ['execution_idx', 'application', 'case', 'version', 'classpath', 'p
               'p_reflection_on_private','reflection_start_percent',
               'search_budget','population','p_object_pool','p_model_pool_target_init', 'p_model_pool_non_target_init','seed_clone','seed_mutations', 'test_dir']
 writer.writerow(fieldnames)
+for sc in OtherData().seed_clone:
+    for index,case in enumerate(cases):
 
-for index,case in enumerate(cases):
-
-    project = ProjectData().findProject(case["project"])
-    for i in range(0,OtherData().repeat):
-        for prob in OtherData().p_functional_mocking:
-            for percent in OtherData().functional_mocking_percent:
-                for time in OtherData().search_budget:
-                    for pop in OtherData().population:
-                        for sc in OtherData().seed_clone:
+        project = ProjectData().findProject(case["project"])
+        for i in range(0,OtherData().repeat):
+            for prob in OtherData().p_functional_mocking:
+                for percent in OtherData().functional_mocking_percent:
+                    for time in OtherData().search_budget:
+                        for pop in OtherData().population:
                             for sm in OtherData().seed_mutations:
                                 for pobj in OtherData().p_object_pool:
                                     for pmodel in OtherData.p_model_pool_init:
